@@ -60,7 +60,27 @@ const install = arg("install", process.env.FOUNDRY_DATA);
 if (args.includes("--install")) {
   if (!install) throw new Error("--install needs a Foundry Data folder (or set FOUNDRY_DATA)");
   const target = path.join(install, "modules", manifest.id);
-  fs.rmSync(target, { recursive: true, force: true });
-  fs.cpSync(out, target, { recursive: true });
-  console.log(`installed to ${target}`);
+  // While a world using the module is open, Foundry holds its compendium packs (LevelDB) open and locked.
+  // Probe first so a running Foundry never leaves us with a half-deleted install.
+  const packsLocked = (manifest.packs ?? []).some((p) => {
+    const lock = path.join(target, p.path, "LOCK");
+    if (!fs.existsSync(lock)) return false;
+    try {
+      fs.renameSync(lock, lock + ".probe");
+      fs.renameSync(lock + ".probe", lock);
+      return false;
+    } catch {
+      return true;
+    }
+  });
+  if (!packsLocked) {
+    fs.rmSync(target, { recursive: true, force: true });
+    fs.cpSync(out, target, { recursive: true });
+    console.log(`installed to ${target}`);
+  } else {
+    const packDir = path.join(out, "packs");
+    fs.cpSync(out, target, { recursive: true, force: true, filter: (src) => !src.startsWith(packDir) });
+    console.warn(`installed to ${target} WITHOUT compendium packs: Foundry has them open.`);
+    console.warn("Return to Setup (or close Foundry) and run the install again to update the compendiums.");
+  }
 }

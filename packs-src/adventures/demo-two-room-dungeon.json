@@ -1,0 +1,393 @@
+{
+  "_id": "jmiAdvDemoDungn1",
+  "_key": "!adventures!jmiAdvDemoDungn1",
+  "name": "Demo: Two-Room Dungeon",
+  "img": "modules/jmi-3d-toolkit/assets/models/props/chest-animated.webp",
+  "caption": "A tiny 3D Canvas dungeon to try the toolkit.",
+  "description": "<p>Two rooms, a locked door and a treasure chest.</p><ol><li>Import, then open the scene <strong>JMI Demo: Two-Room Dungeon</strong> in 3D.</li><li>Drop a player character in the west room, select the token and click the chest.</li><li>Take the <strong>Iron Key</strong>, then walk up to the door: it unlocks.</li></ol>",
+  "scenes": [
+    {
+      "name": "JMI Demo: Two-Room Dungeon",
+      "_id": "jmiScnTwoRoomDg1",
+      "active": false,
+      "navigation": false,
+      "navOrder": 0,
+      "thumb": null,
+      "width": 4000,
+      "height": 3000,
+      "padding": 0.25,
+      "shiftX": 0,
+      "shiftY": 0,
+      "initial": {
+        "x": null,
+        "y": null,
+        "scale": null
+      },
+      "initialLevel": "defaultLevel0000",
+      "grid": {
+        "type": 1,
+        "size": 100,
+        "style": "solidLines",
+        "thickness": 1,
+        "color": "#000000",
+        "alpha": 0.2,
+        "distance": 5,
+        "units": "ft"
+      },
+      "tokenVision": true,
+      "fog": {
+        "mode": 2,
+        "colors": {
+          "explored": null,
+          "unexplored": null
+        }
+      },
+      "environment": {
+        "darknessLevel": 0,
+        "darknessLock": false,
+        "globalLight": {
+          "enabled": false,
+          "alpha": 0.5,
+          "bright": false,
+          "color": null,
+          "coloration": 1,
+          "luminosity": 0,
+          "saturation": 0,
+          "contrast": 0,
+          "shadows": 0,
+          "darkness": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        "cycle": true,
+        "base": {
+          "hue": 0,
+          "intensity": 0,
+          "luminosity": 0,
+          "saturation": 0,
+          "shadows": 0
+        },
+        "dark": {
+          "hue": 0.7138888888888889,
+          "intensity": 0,
+          "luminosity": -0.25,
+          "saturation": 0,
+          "shadows": 0
+        }
+      },
+      "transition": {
+        "type": null,
+        "duration": 1500,
+        "activeOnly": false
+      },
+      "drawings": [],
+      "tokens": [],
+      "levels": [
+        "defaultLevel0000"
+      ],
+      "lights": [],
+      "notes": [],
+      "sounds": [],
+      "regions": [],
+      "tiles": [
+        {
+          "x": 1100,
+          "y": 3700,
+          "width": 1800,
+          "height": 1200,
+          "elevation": 0,
+          "texture": {
+            "src": "modules/levels-3d-preview/assets/blank.webp",
+            "anchorX": 0.5,
+            "anchorY": 0.5,
+            "fit": "fill",
+            "scaleX": 1,
+            "scaleY": 1,
+            "tint": "#ffffff",
+            "alphaThreshold": 0.75
+          },
+          "flags": {
+            "levels-3d-preview": {
+              "model3d": "modules/jmi-3d-toolkit/assets/models/two-room-dungeon.glb",
+              "autoGround": true,
+              "autoCenter": false,
+              "depth": 214,
+              "wasFreeMode": false,
+              "tiltX": 0,
+              "tiltZ": 0,
+              "fillType": "stretch",
+              "modelDoors": {
+                "room1_room2_door": {
+                  "ds": 2
+                }
+              }
+            }
+          },
+          "rotation": 0,
+          "_id": "jmiTileDungeon01",
+          "levels": [
+            "defaultLevel0000"
+          ],
+          "sort": 0,
+          "alpha": 1,
+          "hidden": false,
+          "locked": false,
+          "restrictions": {
+            "light": false,
+            "weather": false
+          },
+          "occlusion": {
+            "modes": [],
+            "alpha": 0
+          },
+          "video": {
+            "loop": true,
+            "autoplay": true,
+            "volume": 0
+          }
+        },
+        {
+          "x": 2068,
+          "y": 3538,
+          "width": 65,
+          "height": 45,
+          "elevation": 0,
+          "texture": {
+            "src": "modules/levels-3d-preview/assets/blank.webp",
+            "anchorX": 0.5,
+            "anchorY": 0.5,
+            "fit": "fill",
+            "scaleX": 1,
+            "scaleY": 1,
+            "tint": "#ffffff",
+            "alphaThreshold": 0.75
+          },
+          "flags": {
+            "levels-3d-preview": {
+              "model3d": "modules/jmi-3d-toolkit/assets/models/props/chest-animated.glb",
+              "autoGround": true,
+              "autoCenter": false,
+              "depth": 40,
+              "fillType": "stretch",
+              "doorType": 1,
+              "doorStyle": 5,
+              "doorState": 0,
+              "animationOnce": true,
+              "enableAnim": true,
+              "animIndex": 0,
+              "sight": false,
+              "doorSound": "woodCreaky"
+            },
+            "jmi-3d-toolkit": {
+              "actorUuid": "Actor.jmiActChestDemo1",
+              "name": "Treasure Chest",
+              "hasLid": true,
+              "removeWhenEmpty": false,
+              "keyName": "",
+              "consumeKey": false
+            }
+          },
+          "rotation": 0,
+          "_id": "jmiTileChest0001",
+          "levels": [
+            "defaultLevel0000"
+          ],
+          "sort": 1,
+          "alpha": 1,
+          "hidden": false,
+          "locked": false,
+          "restrictions": {
+            "light": false,
+            "weather": false
+          },
+          "occlusion": {
+            "modes": [],
+            "alpha": 0
+          },
+          "video": {
+            "loop": true,
+            "autoplay": true,
+            "volume": 0
+          }
+        }
+      ],
+      "walls": [],
+      "playlist": null,
+      "playlistSound": null,
+      "journal": null,
+      "journalEntryPage": null,
+      "weather": "",
+      "folder": null,
+      "sort": 0,
+      "ownership": {
+        "default": 0
+      },
+      "flags": {
+        "levels-3d-preview": {
+          "enablePlayers": true,
+          "auto3d": true,
+          "object3dSight": true,
+          "enableGameCamera": true,
+          "enableFogOfWar": true,
+          "grounding": "notFlying",
+          "maxElevation": 5,
+          "enableRuler": true,
+          "enableAnimationScripts": true,
+          "exr": "modules/canvas3dcompendium/assets/Beautiful-Sky/2K/Sky_LowPoly_01_Day_a.webp",
+          "renderBackground": true,
+          "filter": "none",
+          "filterStrength": 1,
+          "filterCustom": "",
+          "renderTable": "matpaper",
+          "tableTex": "",
+          "tableHeightmap": "",
+          "tableHeightmapScale": 1,
+          "tableColor": "#341f0f",
+          "enableFog": false,
+          "fogColor": "#000000",
+          "fogDistance": 3000,
+          "sceneTint": "#ffffff",
+          "timeSync": "darkness",
+          "sunPosition": 9,
+          "exposure": 1,
+          "sunDistance": 10,
+          "sunTilt": 0,
+          "ambientLightIntensity": 0,
+          "ambientLightColor": "#ffffff",
+          "shadowBias": -1.8e-05,
+          "particlePreset2": "none",
+          "particlePreset": "none",
+          "particleTexture": "",
+          "particleDensity": 100,
+          "particleDirection": 90,
+          "particleSize": 20,
+          "particleColor": "#ffc494",
+          "particleOpacity": 0.5,
+          "particleSpeed": 5,
+          "particleRotationspeed": 0,
+          "particleVelocity": 1,
+          "particleRandomRotation": false,
+          "particleRandomScale": true,
+          "particleBlend": false,
+          "particleGroundOffset": 0,
+          "showSceneWalls": true,
+          "showSceneDoors": true,
+          "showSceneFloors": true,
+          "renderSceneLights": true,
+          "mirrorLevels": true,
+          "pp": {
+            "enabled": false,
+            "vignette": 0,
+            "chromaticAberration": 0,
+            "grain": 0,
+            "tint": "#ffffff",
+            "contrast": 1,
+            "brightness": 1,
+            "saturation": 1
+          },
+          "pixel": false,
+          "bloom": false,
+          "bloomThreshold": 0,
+          "bloomStrength": 0.4,
+          "bloomRadius": 0.4
+        }
+      },
+      "navName": "Two-Room Dungeon"
+    }
+  ],
+  "actors": [
+    {
+      "_id": "jmiActChestDemo1",
+      "name": "Loot: Treasure Chest (Demo)",
+      "type": "npc",
+      "img": "icons/containers/chest/chest-reinforced-steel-brown.webp",
+      "system": {
+        "currency": {
+          "pp": 0,
+          "gp": 25,
+          "ep": 0,
+          "sp": 40,
+          "cp": 0
+        }
+      },
+      "items": [
+        {
+          "_id": "jmiItemIronKey02",
+          "name": "Iron Key",
+          "type": "loot",
+          "img": "icons/sundries/misc/key-steel.webp",
+          "system": {
+            "description": {
+              "value": "<p>A heavy iron key. Opens any lootable or 3D door whose key name is <strong>Iron Key</strong>.</p>",
+              "chat": ""
+            },
+            "quantity": 1,
+            "weight": {
+              "value": 0.1,
+              "units": "lb"
+            },
+            "price": {
+              "value": 1,
+              "denomination": "gp"
+            },
+            "identified": true
+          },
+          "ownership": {
+            "default": 0
+          },
+          "flags": {},
+          "effects": []
+        },
+        {
+          "_id": "jmiItemPotion001",
+          "name": "Potion of Healing",
+          "type": "consumable",
+          "img": "icons/consumables/potions/potion-bottle-corked-red.webp",
+          "system": {
+            "description": {
+              "value": "<p>You regain 2d4 + 2 Hit Points when you drink this potion.</p>",
+              "chat": ""
+            },
+            "quantity": 2,
+            "type": {
+              "value": "potion",
+              "subtype": ""
+            },
+            "price": {
+              "value": 50,
+              "denomination": "gp"
+            },
+            "identified": true
+          },
+          "effects": [],
+          "flags": {}
+        }
+      ],
+      "effects": [],
+      "prototypeToken": {
+        "name": "Treasure Chest",
+        "actorLink": true
+      },
+      "ownership": {
+        "default": 0
+      },
+      "folder": null,
+      "flags": {
+        "jmi-3d-toolkit": {
+          "isLootable": true
+        }
+      }
+    }
+  ],
+  "items": [],
+  "journal": [],
+  "tables": [],
+  "macros": [],
+  "cards": [],
+  "playlists": [],
+  "combats": [],
+  "folders": [],
+  "sort": 0,
+  "flags": {}
+}

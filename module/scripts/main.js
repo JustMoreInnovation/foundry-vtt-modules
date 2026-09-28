@@ -8,6 +8,14 @@ import * as checkpoints from "./checkpoints.js";
 import * as doorKeys from "./door-keys.js";
 import { migrate } from "./migrate.js";
 
+// Show the bundled models in 3D Canvas's Asset Browser (thumbnails are the .webp files next to each .glb).
+Hooks.on("3DCanvasMapmakingPackRegisterAssetPacks", (AssetBrowser) => {
+  AssetBrowser.registerPack(ID, "JMI 3D Toolkit", [
+    { name: "Props", query: "props" },
+    { name: "Dungeons", query: "dungeon" },
+  ], { subfolder: "assets/models" });
+});
+
 Hooks.once("socketlib.ready", () => {
   loot.registerSocket(socketlib.registerModule(ID));
 });

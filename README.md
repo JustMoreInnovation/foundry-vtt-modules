@@ -27,8 +27,12 @@ Enable **JMI 3D Toolkit** in your world, along with its required modules: **3D C
 - **Door keys.** A locked 3D *model door* with a `keyName` property unlocks when a token carrying that item moves next to it.
 
 ### Compendiums
+- **JMI 3D Toolkit: Demo** (Adventure): *Demo: Two-Room Dungeon*. Importing it adds a ready-to-play 3D scene with a lootable treasure chest (25 gp, 40 sp, 2 healing potions and the Iron Key) and a door locked with that key.
 - **JMI 3D Toolkit: Macros:** Configure Lootable, Save Checkpoint, Load Checkpoint, Toggle Static Chest.
 - **JMI 3D Toolkit: Items** (dnd5e): Iron Key.
+
+### 3D Canvas Asset Browser
+The bundled models appear in 3D Canvas's **Asset Browser** under the **JMI 3D Toolkit** pack (tabs *Props* and *Dungeons*), with thumbnails. Drag one onto the scene like any other 3D Canvas asset.
 
 ### Bundled models (`modules/jmi-3d-toolkit/assets/models/`)
 - `props/chest-animated.glb`: a treasure chest with an `Open` lid clip, used by the lootable "Treasure chest" preset. About 950 triangles, 3 materials.
