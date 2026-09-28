@@ -65,12 +65,16 @@ node tools/build.mjs --install "<Foundry Data>"    # build and copy into <Foundr
 ```
 
 ### Release
-Bump nothing by hand. Tag the commit, and CI stamps the version from the tag:
-```bash
-git tag v1.0.1
-git push origin v1.0.1
-```
-The workflow builds `module.zip` and `module.json` and attaches them to the release. The manifest URL above always points at the latest release.
+Releases are automatic. Every push to `main` builds the module and publishes a GitHub release. [GitVersion](https://gitversion.net) (`GitVersion.yml`) picks the version from the commit history:
+
+| Commit message | Bump | Example |
+|---|---|---|
+| anything (default) | patch | `1.0.0 → 1.0.1` |
+| `feat: …` / `feat(scope): …` or `+semver: minor` | minor | `1.0.1 → 1.1.0` |
+| `type!: …`, a `BREAKING CHANGE:` footer, or `+semver: major` | major | `1.1.0 → 2.0.0` |
+| `+semver: none` (or `skip`) in the head commit | no release (still built) | |
+
+Pushing several commits at once produces one release for the newest commit. Pull requests are built but never released. To force a specific version, tag the commit yourself (for example `git tag v2.0.0`); GitVersion continues from there.
 
 ### Blender → 3D Canvas conventions
 - 1 Blender unit = 1 grid square (5 ft). 3D Canvas drops models at true scale.

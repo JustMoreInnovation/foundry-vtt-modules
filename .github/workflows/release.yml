@@ -1,20 +1,28 @@
 name: Build & Release
 
+# Every push to main is a release. GitVersion (GitVersion.yml) computes the version from git history:
+#   patch by default, minor for "feat:" / "+semver: minor", major for "type!:" / "BREAKING CHANGE:" / "+semver: major".
+# A head commit containing "+semver: none" (or "skip") builds but does not release.
 on:
   push:
     branches: [main]
-    tags: ["v*"]
   pull_request:
   workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # GitVersion needs full history and tags
 
       - uses: actions/setup-node@v4
         with:
@@ -23,27 +31,50 @@ jobs:
 
       - run: npm ci
 
-      - name: Build module
-        run: |
-          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then VERSION="${GITHUB_REF_NAME#v}"; else VERSION="0.0.0-dev.${GITHUB_RUN_NUMBER}"; fi
-          node tools/build.mjs --version "$VERSION" --repo "$GITHUB_REPOSITORY"
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v4.7.0
+        with:
+          versionSpec: "6.8.x"
 
-      - name: Check release version matches tag
-        if: github.ref_type == 'tag'
+      - name: Determine version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v4.7.0
+
+      - name: Decide whether to release
+        id: release
+        env:
+          VERSION: ${{ steps.gitversion.outputs.semVer }}
+          HEAD_MSG: ${{ github.event.head_commit.message }}
         run: |
-          test "$(jq -r .version dist/module.json)" = "${GITHUB_REF_NAME#v}"
+          release=false
+          if [[ "$GITHUB_EVENT_NAME" != "pull_request" && "$GITHUB_REF" == "refs/heads/main" ]]; then
+            release=true
+            if printf '%s' "$HEAD_MSG" | grep -Eq '\+semver:[[:space:]]?(none|skip)'; then
+              echo "::notice::Head commit says +semver: none - building without a release"; release=false
+            elif git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
+              echo "::notice::v$VERSION already exists - nothing to release"; release=false
+            fi
+          fi
+          echo "release=$release" >> "$GITHUB_OUTPUT"
+          echo "Version $VERSION (release: $release)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Build module
+        run: node tools/build.mjs --version "${{ steps.gitversion.outputs.semVer }}" --repo "$GITHUB_REPOSITORY"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: jmi-3d-toolkit
+          name: jmi-3d-toolkit-${{ steps.gitversion.outputs.semVer }}
           path: |
             dist/module.json
             dist/module.zip
 
       - name: Publish GitHub release
-        if: github.ref_type == 'tag'
+        if: steps.release.outputs.release == 'true'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ steps.gitversion.outputs.semVer }}
+          name: v${{ steps.gitversion.outputs.semVer }}
+          target_commitish: ${{ github.sha }}
           files: |
             dist/module.json
             dist/module.zip

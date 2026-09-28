@@ -1,0 +1,16 @@
+# Versioning: every commit on main is a release.
+#   - default: patch bump            (1.0.0 -> 1.0.1)
+#   - minor:   "feat: ..." or "+semver: minor|feature" in the message
+#   - major:   "feat!: ..." / "fix!: ..." / "BREAKING CHANGE:" or "+semver: major|breaking"
+#   - none:    "+semver: none|skip" (same version as the previous commit; CI skips the release)
+workflow: TrunkBased/preview1
+tag-prefix: '[vV]?'
+commit-message-incrementing: Enabled
+major-version-bump-message: '(\+semver:\s?(breaking|major))|(^\w+(\([^)]*\))?!:)|(BREAKING[ -]CHANGE:)'
+minor-version-bump-message: '(\+semver:\s?(feature|minor))|(^feat(\([^)]*\))?:)'
+patch-version-bump-message: '(\+semver:\s?(fix|patch))|(^fix(\([^)]*\))?:)'
+no-bump-message: '\+semver:\s?(none|skip)'
+branches:
+  main:
+    increment: Patch
+    label: ''
