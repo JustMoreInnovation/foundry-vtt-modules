@@ -1,0 +1,42 @@
+{
+  "id": "loot-3d",
+  "title": "3D Loot",
+  "description": "Make any 3D Canvas tile lootable (chests, bone piles, barrels): click to open, optional lock and key, optional lid animation, and a loot window where players take items.",
+  "version": "2.0.0",
+  "authors": [
+    {
+      "name": "vidarr101",
+      "url": "https://github.com/vidarr101"
+    }
+  ],
+  "compatibility": {
+    "minimum": "13",
+    "verified": "14"
+  },
+  "esmodules": [
+    "scripts/loot-3d.js"
+  ],
+  "styles": [
+    "styles/loot-3d.css"
+  ],
+  "socket": true,
+  "relationships": {
+    "requires": [
+      {
+        "id": "levels-3d-preview",
+        "type": "module"
+      },
+      {
+        "id": "socketlib",
+        "type": "module"
+      }
+    ],
+    "conflicts": [
+      {
+        "id": "chest-loot-3d",
+        "type": "module",
+        "reason": "Replaced by 3D Loot"
+      }
+    ]
+  }
+}
