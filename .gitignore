@@ -1,3 +1,7 @@
+# Build
+node_modules/
+dist/
+module/packs/
 # Blender autosaves / backups
 *.blend1
 *.blend2

@@ -1,24 +1,26 @@
 /**
- * Scenario Checkpoints (scenario-checkpoints)
- * Save the current scene + everything it depends on into an Adventure "checkpoint", and restore it later.
+ * Scenario checkpoints: save the current scene + everything it depends on into an Adventure "checkpoint",
+ * and restore it later.
  *
- * Saved per checkpoint: the scene (tokens, tiles incl. loot-3d chest/lid/lock state, lights, notes...),
- * the actors of every token on it, every loot-3d / chest-loot-3d contents actor, journal entries pinned
- * as notes, and the folders they live in. Player characters are optional.
+ * Saved per checkpoint: the scene (tokens, tiles incl. lootable lid/lock state, lights, notes...),
+ * the actors of every token on it, every lootable contents actor, journal entries pinned as notes,
+ * and the folders they live in. Player characters are optional.
  *
  * Restoring re-imports that Adventure: documents with the same IDs are fully replaced (embedded tiles,
  * tokens and items included), documents deleted since are recreated.
  */
-const ID = "scenario-checkpoints";
-const PACK_NAME = "scenario-checkpoints";
+import { ID, esc } from "./constants.js";
+import { migrate } from "./migrate.js";
+
+const LEGACY_SCOPE = "scenario-checkpoints"; // flag scope used by the standalone module
+const PACK_NAME = "scenario-checkpoints"; // keep the same world pack so existing checkpoints stay visible
 const PACK_LABEL = "Scenario Checkpoints";
-const LOOT_SCOPES = ["loot-3d", "chest-loot-3d"];
+const LOOT_SCOPES = [ID, "loot-3d", "chest-loot-3d"];
 
-const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+/** Read a checkpoint flag written by this module or by the old standalone module. */
+const cpFlag = (doc, key) => doc.flags?.[ID]?.[key] ?? doc.flags?.[LEGACY_SCOPE]?.[key];
 
-Hooks.once("init", () => {
-  game.modules.get(ID).api = { save: saveCheckpoint, load: loadCheckpoint, getPack };
-});
+export const api = { save: (scene) => saveCheckpoint(scene), load: () => loadCheckpoint(), getPack: (o) => getPack(o) };
 
 /* -------------------------------------------- */
 /*  Compendium                                  */
@@ -111,10 +113,10 @@ async function saveCheckpoint(scene = canvas.scene) {
   const pack = await getPack();
   if (!pack) return;
 
-  const existing = (await pack.getDocuments()).filter((a) => a.getFlag(ID, "sceneId") === scene.id);
+  const existing = (await pack.getDocuments()).filter((a) => cpFlag(a, "sceneId") === scene.id);
   const stamp = new Date().toLocaleString();
   const options = existing
-    .sort((a, b) => (b.getFlag(ID, "savedAt") ?? 0) - (a.getFlag(ID, "savedAt") ?? 0))
+    .sort((a, b) => (cpFlag(b, "savedAt") ?? 0) - (cpFlag(a, "savedAt") ?? 0))
     .map((a) => `<option value="${a.id}">Overwrite: ${esc(a.name)}</option>`)
     .join("");
   const data = await foundry.applications.api.DialogV2.prompt({
@@ -158,14 +160,14 @@ async function loadCheckpoint() {
   if (!game.user.isGM) return ui.notifications.warn("Only the GM can load checkpoints.");
   const pack = await getPack({ create: false });
   if (!pack) return ui.notifications.warn("No checkpoints saved yet.");
-  const all = (await pack.getDocuments()).sort((a, b) => (b.getFlag(ID, "savedAt") ?? 0) - (a.getFlag(ID, "savedAt") ?? 0));
+  const all = (await pack.getDocuments()).sort((a, b) => (cpFlag(b, "savedAt") ?? 0) - (cpFlag(a, "savedAt") ?? 0));
   if (!all.length) return ui.notifications.warn("No checkpoints saved yet.");
 
   const current = canvas.scene?.id;
-  const preselect = all.find((a) => a.getFlag(ID, "sceneId") === current)?.id;
+  const preselect = all.find((a) => cpFlag(a, "sceneId") === current)?.id;
   const opts = all
     .map((a) => {
-      const f = a.flags?.[ID] ?? {};
+      const f = { sceneId: cpFlag(a, "sceneId"), savedAt: cpFlag(a, "savedAt"), includePCs: cpFlag(a, "includePCs") };
       const when = f.savedAt ? new Date(f.savedAt).toLocaleString() : "";
       return `<option value="${a.id}" ${a.id === preselect ? "selected" : ""}>${esc(a.name)}${f.includePCs ? " [+PCs]" : ""}${when ? ` (${esc(when)})` : ""}</option>`;
     })
@@ -184,7 +186,7 @@ async function loadCheckpoint() {
   if (!data?.id) return;
 
   const adv = all.find((a) => a.id === data.id);
-  const sceneId = adv.getFlag(ID, "sceneId");
+  const sceneId = cpFlag(adv, "sceneId");
 
   if (data.endCombat) {
     const combats = game.combats.filter((c) => c.scene?.id === sceneId).map((c) => c.id);
@@ -202,6 +204,7 @@ async function loadCheckpoint() {
   };
 
   const result = await adv.import({ dialog: false, preImport: [skipPCs] });
+  await migrate(); // checkpoints saved before the toolkit may carry old module flags / asset paths
   const n = Object.values(result.created ?? {}).flat().length + Object.values(result.updated ?? {}).flat().length;
   ui.notifications.info(`Checkpoint loaded: ${adv.name} (${n} documents restored).`);
 

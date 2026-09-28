@@ -1,0 +1,49 @@
+{
+  "id": "jmi-3d-toolkit",
+  "title": "JMI 3D Toolkit",
+  "description": "Tools for 3D Canvas games: make any 3D tile lootable (chests, bone piles; locks, keys, lid animation, loot window), save and restore scenario checkpoints, and unlock key-locked 3D model doors. Includes a treasure chest and a test dungeon model, plus ready-made macros.",
+  "version": "0.0.0-dev",
+  "authors": [{ "name": "vidarr101", "url": "https://github.com/vidarr101" }],
+  "url": "https://github.com/JustMoreInnovation/foundry-vtt-modules",
+  "bugs": "https://github.com/JustMoreInnovation/foundry-vtt-modules/issues",
+  "license": "LICENSE",
+  "readme": "README.md",
+  "manifest": "",
+  "download": "",
+  "compatibility": { "minimum": "13", "verified": "14" },
+  "esmodules": ["scripts/main.js"],
+  "styles": ["styles/toolkit.css"],
+  "socket": true,
+  "packs": [
+    {
+      "name": "macros",
+      "label": "JMI 3D Toolkit: Macros",
+      "path": "packs/macros",
+      "type": "Macro",
+      "ownership": { "PLAYER": "NONE", "ASSISTANT": "OWNER" }
+    },
+    {
+      "name": "items",
+      "label": "JMI 3D Toolkit: Items",
+      "path": "packs/items",
+      "type": "Item",
+      "system": "dnd5e",
+      "ownership": { "PLAYER": "OBSERVER", "ASSISTANT": "OWNER" }
+    }
+  ],
+  "packFolders": [
+    { "name": "JMI 3D Toolkit", "sorting": "m", "packs": ["macros", "items"] }
+  ],
+  "relationships": {
+    "requires": [
+      { "id": "levels-3d-preview", "type": "module", "compatibility": {} },
+      { "id": "socketlib", "type": "module", "compatibility": {} }
+    ],
+    "conflicts": [
+      { "id": "loot-3d", "type": "module", "reason": "Merged into JMI 3D Toolkit" },
+      { "id": "chest-loot-3d", "type": "module", "reason": "Merged into JMI 3D Toolkit" },
+      { "id": "scenario-checkpoints", "type": "module", "reason": "Merged into JMI 3D Toolkit" },
+      { "id": "door-keys-3d", "type": "module", "reason": "Merged into JMI 3D Toolkit" }
+    ]
+  }
+}

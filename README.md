@@ -1,42 +1,78 @@
-# Foundry VTT 3D modules and assets
+# JMI 3D Toolkit for Foundry VTT
 
-Custom modules, macros and 3D models for [Foundry VTT](https://foundryvtt.com) v13–v14 with the
-[3D Canvas](https://foundryvtt.com/packages/levels-3d-preview) module (`levels-3d-preview`). Built and tested with the D&D 5e system 5.3.
+A Foundry VTT (v13–v14) module for games that use the [3D Canvas](https://foundryvtt.com/packages/levels-3d-preview) module. It also contains the Blender sources for every model it ships. Built and tested with the D&D 5e system 5.3.
 
 | Closed | Opened |
 |---|---|
 | ![Chest closed](docs/images/chest-closed.png) | ![Chest opened](docs/images/chest-looted.png) |
 
-## Modules (`modules/`)
+## Install
+In Foundry: **Add-on Modules → Install Module**, paste this manifest URL, then **Install**:
 
-| Module | What it does | Requires |
-|---|---|---|
-| **loot-3d** (3D Loot) | Any 3D tile becomes lootable: a chest, a bone pile, a barrel. Players click it, can need a key, and see a loot window with Take / Take all. Supports a lid animation, locks and keys, and removing the tile when it's empty. Contents come from a linked "contents actor". | levels-3d-preview, socketlib |
-| **scenario-checkpoints** | Saves the current scene plus its monsters, loot actors and pinned journals as an Adventure "checkpoint", and restores it later so a scenario can be reset or replayed. | – |
-| **door-keys-3d** | Unlocks a locked 3D-model door when a token carrying the matching key item (`keyName` on the door mesh) moves next to it. | levels-3d-preview |
-
-### Install
-Copy (or symlink/junction) a module folder into your Foundry `Data/modules/` folder, then enable it in **Manage Modules**.
-
-Macros:
-```js
-game.modules.get("loot-3d").api.configure();          // select a tile first (Tiles layer)
-game.modules.get("scenario-checkpoints").api.save();
-game.modules.get("scenario-checkpoints").api.load();
+```
+https://github.com/JustMoreInnovation/foundry-vtt-modules/releases/latest/download/module.json
 ```
 
-## 3D assets
-- `foundry-assets/models/`: ready-to-use GLBs. Copy this to `Data/assets/models/`, because the modules expect `assets/models/props/chest-animated.glb`.
-  - `props/chest-animated.glb`: a treasure chest with an `Open` lid clip (used by loot-3d's chest preset). About 950 triangles, 3 materials.
-  - `props/chest-closed.glb` / `chest-looted.glb`: static versions, for use with `macros/toggle-chest-static.js`.
-  - `two-room-dungeon.glb`: an 18×12-square test dungeon with a lockable door. 3D Canvas sight and collision come from mesh tags.
-- `blender/`: the Blender 5.2 source files, with textures linked by relative paths.
+Enable **JMI 3D Toolkit** in your world, along with its required modules: **3D Canvas** (`levels-3d-preview`) and **socketlib**. Foundry offers updates automatically whenever a new release is published.
+
+> Replaces the earlier standalone modules `loot-3d`, `chest-loot-3d`, `scenario-checkpoints` and `door-keys-3d`. Disable those first. On the GM's first load, the toolkit migrates their data (lootable tiles, contents actors, checkpoints) and repoints tiles that used the bundled models.
+
+## Features
+- **Lootables.** Any 3D tile can become a lootable container: a chest, a bone pile, a barrel.
+  - Players click it (Token layer, token selected, within 3 squares) and get a loot window with **Take** and **Take all**.
+  - Contents come from a linked *contents actor*, so only what you put there can be looted.
+  - Optional: a lock and key item, a lid animation (any GLB with an opening clip), and removing the tile once it's empty.
+  - All transfers run on the GM client.
+- **Scenario checkpoints.** Save the current scene (tokens, tiles, chest states), its monsters, loot actors and pinned journals as an Adventure in a world compendium. Load it later to reset or replay. Player characters are optional.
+- **Door keys.** A locked 3D *model door* with a `keyName` property unlocks when a token carrying that item moves next to it.
+
+### Compendiums
+- **JMI 3D Toolkit: Macros:** Configure Lootable, Save Checkpoint, Load Checkpoint, Toggle Static Chest.
+- **JMI 3D Toolkit: Items** (dnd5e): Iron Key.
+
+### Bundled models (`modules/jmi-3d-toolkit/assets/models/`)
+- `props/chest-animated.glb`: a treasure chest with an `Open` lid clip, used by the lootable "Treasure chest" preset. About 950 triangles, 3 materials.
+- `props/chest-closed.glb`, `props/chest-looted.glb`: static versions, for use with the Toggle Static Chest macro.
+- `two-room-dungeon.glb`: an 18×12-square test dungeon with a lockable door.
+
+### API
+```js
+const api = game.modules.get("jmi-3d-toolkit").api;
+api.configure();          // make the selected tile lootable
+api.saveCheckpoint();     // save the viewed scene
+api.loadCheckpoint();     // pick and restore a checkpoint
+api.loot.status();        // { ready, patched, enabled }
+```
+
+## Repository layout
+| Path | What |
+|---|---|
+| `module/` | The module source: `module.json`, `scripts/`, `styles/`, `assets/models/`. |
+| `packs-src/` | Compendium documents as JSON. They're compiled into LevelDB packs at build time. |
+| `tools/build.mjs` | The build: copies the module, compiles packs, stamps the version and manifest/download URLs, and zips it. |
+| `.github/workflows/release.yml` | CI: builds on every push; publishes a GitHub release on `v*` tags. |
+| `blender/` | Blender 5.2 source files for the bundled models, with textures linked by relative paths. |
+
+### Develop
+```bash
+npm ci
+npm run build                                      # -> dist/module.zip + dist/module.json
+node tools/build.mjs --install "<Foundry Data>"    # build and copy into <Foundry Data>/modules/jmi-3d-toolkit
+```
+
+### Release
+Bump nothing by hand. Tag the commit, and CI stamps the version from the tag:
+```bash
+git tag v1.0.1
+git push origin v1.0.1
+```
+The workflow builds `module.zip` and `module.json` and attaches them to the release. The manifest URL above always points at the latest release.
 
 ### Blender → 3D Canvas conventions
 - 1 Blender unit = 1 grid square (5 ft). 3D Canvas drops models at true scale.
 - Mesh tags are Object custom properties, which export as glTF extras: `collision`, `sight`, `isDoor`, `doorId`, `keyName`. Export with **Include → Custom Properties** on.
 - For a door or any other mesh whose position matters, parent an Empty to it. 3D Canvas bakes the transforms of childless meshes in non-animated models.
-- A prop that opens should be one GLB whose rest pose is closed and that has an opening clip. loot-3d drives it through 3D Canvas's "door linked to animation" (door style 5).
+- A prop that opens should be one GLB whose rest pose is closed and that has an opening clip. Lootables drive it through 3D Canvas's "door linked to animation" (door style 5).
 
 ## License
 MIT. See [LICENSE](LICENSE).

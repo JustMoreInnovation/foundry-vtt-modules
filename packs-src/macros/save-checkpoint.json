@@ -1,0 +1,15 @@
+{
+  "_id": "jmiMacroSaveChkp",
+  "_key": "!macros!jmiMacroSaveChkp",
+  "name": "Save Checkpoint",
+  "type": "script",
+  "scope": "global",
+  "img": "icons/svg/book.svg",
+  "command": "// Save the current scene, its monsters, loot containers and pinned journals as a checkpoint.\ngame.modules.get(\"jmi-3d-toolkit\").api.saveCheckpoint();",
+  "folder": null,
+  "sort": 200000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

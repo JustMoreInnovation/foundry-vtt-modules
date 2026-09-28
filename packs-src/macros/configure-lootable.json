@@ -1,0 +1,15 @@
+{
+  "_id": "jmiMacroConfLoot",
+  "_key": "!macros!jmiMacroConfLoot",
+  "name": "Configure Lootable",
+  "type": "script",
+  "scope": "global",
+  "img": "icons/svg/chest.svg",
+  "command": "// Select a tile on the Tiles layer, then run to make it lootable (or edit its loot settings).\ngame.modules.get(\"jmi-3d-toolkit\").api.configure();",
+  "folder": null,
+  "sort": 100000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

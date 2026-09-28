@@ -1,63 +1,66 @@
 /**
- * 3D Loot (loot-3d)
- * Turns any 3D Canvas tile into a lootable container: a chest, a pile of bones, a barrel, a corpse...
- *
- * - Contents live on a linked "contents actor" (items + currency). Only what's on that actor is lootable.
- * - Players click the tile (Token layer, token selected, within 3 squares) to open it and get a loot window.
- * - Optional lock + key item. Optional lid animation (any GLB with an opening clip). Optional auto-remove when emptied.
- * - Every transfer runs on the GM client via socketlib.
- *
- * Successor of chest-loot-3d; existing chest tiles/actors are migrated on the GM's first load.
+ * Lootables: any 3D Canvas tile becomes a lootable container (chest, bone pile, barrel...).
+ * Contents live on a linked "contents actor"; players click the tile to open it and take items.
+ * All transfers run on the GM client via socketlib.
  */
-const ID = "loot-3d";
-const OLD_ID = "chest-loot-3d";
-const L3D = "levels-3d-preview";
+import { ID, L3D, MODULE_PATH, state, esc } from "./constants.js";
+
 const PATCHED = Symbol.for(`${ID}.patched`);
 const CURRENCIES = ["pp", "gp", "ep", "sp", "cp"];
 const STACKABLE = ["consumable", "loot"];
 
 /** Model presets offered in the configure dialog. `lid` = the GLB has an opening animation. */
-const PRESETS = {
+export const PRESETS = {
   keep: { label: "Keep current model" },
-  chest: { label: "Treasure chest (animated lid)", model: "assets/models/props/chest-animated.glb", lid: true, sound: "woodCreaky", name: "Treasure Chest" },
+  chest: { label: "Treasure chest (animated lid)", model: `${MODULE_PATH}/assets/models/props/chest-animated.glb`, lid: true, sound: "woodCreaky", name: "Treasure Chest" },
 };
 
 let socket;
-const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 /* -------------------------------------------- */
-/*  Setup                                       */
+/*  Lifecycle (called from main.js)             */
 /* -------------------------------------------- */
 
-Hooks.once("socketlib.ready", () => {
-  socket = socketlib.registerModule(ID);
-  socket.register("open", gmOpen);
-  socket.register("setState", gmSetState);
-  socket.register("getContents", gmGetContents);
-  socket.register("takeItem", gmTakeItem);
-  socket.register("takeCurrency", gmTakeCurrency);
-  socket.register("takeAll", gmTakeAll);
-  socket.register("refresh", refreshWindows);
-});
+export function registerSocket(s) {
+  socket = s;
+  socket.register("loot.open", gmOpen);
+  socket.register("loot.setState", gmSetState);
+  socket.register("loot.getContents", gmGetContents);
+  socket.register("loot.takeItem", gmTakeItem);
+  socket.register("loot.takeCurrency", gmTakeCurrency);
+  socket.register("loot.takeAll", gmTakeAll);
+  socket.register("loot.refresh", refreshWindows);
+}
 
-Hooks.once("init", () => {
-  game.modules.get(ID).api = {
-    configure: configureLootable,
-    configureChest: configureLootable, // old macro name keeps working
-    openLootWindow,
-    presets: PRESETS,
-    status: () => ({ ready: !!game.Levels3DPreview, patched: isPatched() }),
-  };
-});
+export const api = {
+  configure: (tile) => configureLootable(tile),
+  openLootWindow: (tileDoc) => openLootWindow(tileDoc),
+  presets: PRESETS,
+  status: () => ({ ready: !!game.Levels3DPreview, patched: isPatched(), enabled: state.enabled }),
+};
 
-Hooks.once("ready", async () => {
-  if (game.modules.get(OLD_ID)?.active) {
-    ui.notifications.error("3D Loot: disable the old \"3D Chest Loot\" module, it conflicts with this one.", { permanent: true });
-    return;
+export function init() {
+  // Contents actor edited from its sheet -> refresh open loot windows everywhere.
+  for (const hook of ["createItem", "updateItem", "deleteItem"]) {
+    Hooks.on(hook, (item) => {
+      if (state.enabled && game.user.isGM && item.parent?.getFlag(ID, "isLootable")) socket?.executeForEveryone("loot.refresh", item.parent.uuid);
+    });
   }
-  if (game.user === game.users.activeGM) await migrate();
-  if (!game.modules.get(L3D)?.active) return;
+  Hooks.on("updateActor", (actor, changes) => {
+    if (state.enabled && game.user.isGM && actor.getFlag(ID, "isLootable") && foundry.utils.hasProperty(changes, "system.currency")) {
+      socket?.executeForEveryone("loot.refresh", actor.uuid);
+    }
+  });
+  Hooks.on("updateTile", (tileDoc, changes) => {
+    if (tileDoc.flags?.[ID]?.actorUuid && foundry.utils.hasProperty(changes, `flags.${L3D}.doorState`)) {
+      refreshWindows(tileDoc.flags[ID].actorUuid);
+    }
+  });
+  Hooks.on("deleteTile", (tileDoc) => windows.get(tileDoc.uuid)?.close());
+}
 
+export async function ready() {
+  if (!game.modules.get(L3D)?.active) return;
   // 3D Canvas creates game.Levels3DPreview in its own "ready" hook, which may run after ours.
   let L = game.Levels3DPreview;
   for (let i = 0; !L && i < 600; i++) {
@@ -85,60 +88,6 @@ Hooks.once("ready", async () => {
     patchFromLive();
     if (isPatched()) clearInterval(timer);
   }, 1000);
-  console.log(`${ID} | ready`);
-});
-
-// Contents actor edited from its sheet -> refresh open loot windows everywhere.
-for (const hook of ["createItem", "updateItem", "deleteItem"]) {
-  Hooks.on(hook, (item) => {
-    if (game.user.isGM && item.parent?.getFlag(ID, "isLootable")) socket?.executeForEveryone("refresh", item.parent.uuid);
-  });
-}
-Hooks.on("updateActor", (actor, changes) => {
-  if (game.user.isGM && actor.getFlag(ID, "isLootable") && foundry.utils.hasProperty(changes, "system.currency")) {
-    socket?.executeForEveryone("refresh", actor.uuid);
-  }
-});
-Hooks.on("updateTile", (tileDoc, changes) => {
-  if (tileDoc.getFlag(ID, "actorUuid") && foundry.utils.hasProperty(changes, `flags.${L3D}.doorState`)) {
-    refreshWindows(tileDoc.getFlag(ID, "actorUuid"));
-  }
-});
-Hooks.on("deleteTile", (tileDoc) => windows.get(tileDoc.uuid)?.close());
-
-/* -------------------------------------------- */
-/*  Migration from chest-loot-3d                */
-/* -------------------------------------------- */
-
-async function migrate() {
-  let tiles = 0;
-  let actors = 0;
-  for (const scene of game.scenes) {
-    const updates = [];
-    for (const tile of scene.tiles) {
-      const old = tile.flags?.[OLD_ID];
-      if (!old?.actorUuid || tile.flags?.[ID]?.actorUuid) continue;
-      updates.push({
-        _id: tile.id,
-        [`flags.${ID}`]: { ...old, hasLid: old.hasLid ?? true, removeWhenEmpty: false },
-        [`flags.${L3D}.sight`]: false,
-      });
-    }
-    if (updates.length) {
-      await scene.updateEmbeddedDocuments("Tile", updates);
-      tiles += updates.length;
-    }
-  }
-  for (const actor of game.actors) {
-    if (actor.flags?.[OLD_ID]?.isChest && !actor.flags?.[ID]?.isLootable) {
-      await actor.update({ [`flags.${ID}.isLootable`]: true });
-      actors++;
-    }
-  }
-  if (tiles || actors) {
-    console.log(`${ID} | migrated ${tiles} tile(s) and ${actors} actor(s) from ${OLD_ID}`);
-    ui.notifications.info(`3D Loot: migrated ${tiles} lootable tile(s) from 3D Chest Loot.`);
-  }
 }
 
 /* -------------------------------------------- */
@@ -161,7 +110,7 @@ function patchTile3D(cls) {
   proto._onClickLeft = function (e) {
     const doc = this.tile?.document;
     const onTokenLayer = canvas.activeLayer?.options?.objectClass?.embeddedName === "Token";
-    if (onTokenLayer && doc?.getFlag(ID, "actorUuid")) {
+    if (state.enabled && onTokenLayer && doc?.flags?.[ID]?.actorUuid) {
       onLootClick(this, doc).catch((err) => console.error(`${ID} |`, err));
       return;
     }
@@ -173,7 +122,7 @@ function patchTile3D(cls) {
   const origAnim = proto.setupAnimations;
   proto.setupAnimations = function (...args) {
     const doc = this.tile?.document;
-    if (doc?.getFlag(ID, "actorUuid")) {
+    if (state.enabled && doc?.flags?.[ID]?.actorUuid) {
       const open = Number(doc.getFlag(L3D, "doorState") ?? 0) === 1;
       if (this._currentClipAction && this._lootOpen === open) return;
       this._lootOpen = open;
@@ -241,7 +190,7 @@ async function onLootClick(tile3d, tileDoc) {
     return ui.notifications.info(`The ${name} is locked.`);
   }
   if (!game.users.activeGM) return ui.notifications.warn("A GM must be connected to loot.");
-  const res = await socket.executeAsGM("open", { tileUuid: tileDoc.uuid, actorUuid: looterActor()?.uuid ?? null, userId: game.user.id });
+  const res = await socket.executeAsGM("loot.open", { tileUuid: tileDoc.uuid, actorUuid: looterActor()?.uuid ?? null, userId: game.user.id });
   if (!res?.ok) return ui.notifications.warn(res?.reason ?? `The ${name} won't open.`);
   openLootWindow(tileDoc);
 }
@@ -361,7 +310,7 @@ async function afterTake(c, taken) {
     await c.tileDoc.delete(); // deleteTile hook closes the windows
     return;
   }
-  socket.executeForEveryone("refresh", c.source.uuid);
+  socket.executeForEveryone("loot.refresh", c.source.uuid);
 }
 
 function currencyText(cur) {
@@ -443,13 +392,13 @@ const { ApplicationV2 } = foundry.applications.api;
 
 class LootApp extends ApplicationV2 {
   constructor(tileDoc, options = {}) {
-    super({ ...options, id: `${ID}-${tileDoc.id}` });
+    super({ ...options, id: `${ID}-loot-${tileDoc.id}` });
     this.tileDoc = tileDoc;
     this.actorUuid = tileDoc.getFlag(ID, "actorUuid");
   }
 
   static DEFAULT_OPTIONS = {
-    classes: [ID],
+    classes: ["jmi-loot"],
     tag: "div",
     window: { title: "Loot", icon: "fa-solid fa-sack", resizable: false },
     position: { width: 340, height: "auto" },
@@ -470,7 +419,7 @@ class LootApp extends ApplicationV2 {
   async _prepareContext() {
     this.actorUuid = this.tileDoc.getFlag(ID, "actorUuid");
     const args = { tileUuid: this.tileDoc.uuid };
-    const data = game.user.isGM ? await gmGetContents(args) : await socket.executeAsGM("getContents", args);
+    const data = game.user.isGM ? await gmGetContents(args) : await socket.executeAsGM("loot.getContents", args);
     return { data, isGM: game.user.isGM, looter: looterActor() };
   }
 
@@ -546,17 +495,17 @@ class LootApp extends ApplicationV2 {
   }
 
   static async #onTake(event, target) {
-    await this.#call("takeItem", { itemId: target.dataset.itemId });
+    await this.#call("loot.takeItem", { itemId: target.dataset.itemId });
   }
   static async #onTakeCurrency() {
-    await this.#call("takeCurrency");
+    await this.#call("loot.takeCurrency");
   }
   static async #onTakeAll() {
-    await this.#call("takeAll");
+    await this.#call("loot.takeAll");
   }
   static async #onState(event, target) {
     const state = Number(target.dataset.state);
-    await socket.executeAsGM("setState", { tileUuid: this.tileDoc.uuid, state, userId: game.user.id });
+    await socket.executeAsGM("loot.setState", { tileUuid: this.tileDoc.uuid, state, userId: game.user.id });
     if (state === 0 && !game.user.isGM) return this.close();
     this.render();
   }

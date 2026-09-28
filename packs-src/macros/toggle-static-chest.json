@@ -1,0 +1,15 @@
+{
+  "_id": "jmiMacroTglChest",
+  "_key": "!macros!jmiMacroTglChest",
+  "name": "Toggle Static Chest",
+  "type": "script",
+  "scope": "global",
+  "img": "icons/svg/dice-target.svg",
+  "command": "// Toggle Static Chest (3D Canvas): closed <-> looted, for the static chest models.\n// GM macro. On the Tiles layer, select one or more static chest tiles, then run.\n// Swaps the tile's GLB and resizes the tile so the chest keeps its scale and position.\n// (For clickable chests with a real lid animation, use \"Configure Lootable\" instead.)\nconst DIR = \"modules/jmi-3d-toolkit/assets/models/props/\";\n// Model bounding boxes in Blender units (1 unit = 1 grid square): w = X, h = Y (canvas N-S), d = Z (height)\nconst V = {\n  closed: { file: DIR + \"chest-closed.glb\", w: 0.653, h: 0.454, d: 0.398 },\n  looted: { file: DIR + \"chest-looted.glb\", w: 0.653, h: 0.648, d: 0.7128 },\n};\nconst F = \"levels-3d-preview\";\nconst tiles = canvas.tiles.controlled.filter((t) => /chest-(closed|looted)\\.glb$/i.test(t.document.getFlag(F, \"model3d\") ?? \"\"));\nif (!tiles.length) return ui.notifications.warn(\"Select a static chest tile on the Tiles layer first.\");\nconst updates = tiles.map((t) => {\n  const doc = t.document;\n  const looted = /chest-looted/i.test(doc.getFlag(F, \"model3d\"));\n  const from = looted ? V.looted : V.closed, to = looted ? V.closed : V.looted;\n  const s = doc.width / from.w; // canvas px per Blender unit for this tile (keeps any custom scale)\n  const cx = doc.x + doc.width / 2, cy = doc.y + doc.height / 2; // model origin sits at the tile centre\n  const w = Math.round(to.w * s), h = Math.round(to.h * s);\n  return {\n    _id: doc.id, x: Math.round(cx - w / 2), y: Math.round(cy - h / 2), width: w, height: h,\n    [`flags.${F}.model3d`]: to.file,\n    [`flags.${F}.depth`]: Math.round(to.d * s),\n    [`flags.${F}.autoCenter`]: false,\n    [`flags.${F}.sight`]: false, // static chest meshes don't block sight; avoids a 3D Canvas worker error\n  };\n});\nawait canvas.scene.updateEmbeddedDocuments(\"Tile\", updates);\nui.notifications.info(`Chest ${updates.length > 1 ? \"tiles\" : \"tile\"} toggled.`);\n",
+  "folder": null,
+  "sort": 400000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

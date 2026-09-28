@@ -1,0 +1,30 @@
+{
+  "_id": "jmiItemIronKey01",
+  "_key": "!items!jmiItemIronKey01",
+  "name": "Iron Key",
+  "type": "loot",
+  "img": "icons/sundries/misc/key-steel.webp",
+  "system": {
+    "description": {
+      "value": "<p>A heavy iron key. Opens any lootable or 3D door whose key name is <strong>Iron Key</strong>.</p>",
+      "chat": ""
+    },
+    "quantity": 1,
+    "weight": {
+      "value": 0.1,
+      "units": "lb"
+    },
+    "price": {
+      "value": 1,
+      "denomination": "gp"
+    },
+    "identified": true
+  },
+  "folder": null,
+  "sort": 100000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "effects": []
+}

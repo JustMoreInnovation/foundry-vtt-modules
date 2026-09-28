@@ -1,0 +1,15 @@
+{
+  "_id": "jmiMacroLoadChkp",
+  "_key": "!macros!jmiMacroLoadChkp",
+  "name": "Load Checkpoint",
+  "type": "script",
+  "scope": "global",
+  "img": "icons/svg/clockwork.svg",
+  "command": "// Restore a saved checkpoint.\ngame.modules.get(\"jmi-3d-toolkit\").api.loadCheckpoint();",
+  "folder": null,
+  "sort": 300000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {}
+}

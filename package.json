@@ -1,0 +1,14 @@
+{
+  "name": "jmi-3d-toolkit",
+  "private": true,
+  "type": "module",
+  "description": "Build tooling for the JMI 3D Toolkit Foundry VTT module",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "install:local": "node tools/build.mjs --install"
+  },
+  "devDependencies": {
+    "@foundryvtt/foundryvtt-cli": "^1.1.0",
+    "adm-zip": "^0.5.16"
+  }
+}
